@@ -3,10 +3,10 @@ import ExamQuestions from '../models/examQuestions.model.js';
 import { sendEmail } from '../utils/emailSender.js'; // Ensure to import sendEmail
 
 export const submitResult = async (req, res) => {
-    const { userId, examName, responses } = req.body;
+    const { email, examName, responses } = req.body;
 
     // Validate input
-    if (!userId || !examName || !responses) {
+    if (!email || !examName || !responses) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -39,7 +39,7 @@ export const submitResult = async (req, res) => {
         // Create a new result record with scores by subject
         const result = new Result({
             examName,
-            userId,
+            email,
             scores: subjectScores, // Store subject-wise scores
             responses,
         });

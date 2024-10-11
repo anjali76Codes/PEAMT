@@ -99,3 +99,16 @@ export const signout = (req, res) => {
     res.clearCookie('access_token').status(200).json({ message: " Signed out successfully" })
 
 }
+
+export const getUserIdByEmail = async (req, res, next) => {
+    try {
+        const { email } = req.params;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ userId: user._id });
+    } catch (error) {
+        next(error);
+    }
+};

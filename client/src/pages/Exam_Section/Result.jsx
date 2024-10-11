@@ -12,7 +12,7 @@ function Result() {
     useEffect(() => {
         const fetchResults = async () => {
             try {
-                const response = await fetch(`/api/results?userId=${currentUser._id}`);
+                const response = await fetch(`/api/results?userEmail=${encodeURIComponent(currentUser.email)}`); // Change to userEmail
                 if (!response.ok) {
                     throw new Error('Failed to fetch results');
                 }

@@ -21,10 +21,31 @@ function ExamWindow() {
     const timerRef = useRef();
     const navigate = useNavigate();
 
+    const [alertCount, setAlertCount] = useState({
+        visibility: 0,
+        blur: 0,
+        copy: 0,
+        refresh: 0,
+        fullscreen: 0,
+    });
+
+    const securityFeaturesEnabled = true; // Set to true to enable security features
+
     useEffect(() => {
+        if (!currentUser || !currentUser._id) {
+            navigate('/login');
+            return;
+        }
+
         const fetchData = async () => {
             try {
-                const response = await fetch(`/api/examQuestions?examName=${encodeURIComponent(examName)}`);
+                const response = await fetch(`/api/examQuestions?examName=${encodeURIComponent(examName)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentUser.token}`,
+                    },
+                });
+
                 if (!response.ok) throw new Error('Failed to fetch questions');
                 const data = await response.json();
 
@@ -35,6 +56,10 @@ function ExamWindow() {
                         acc[subject].push(question);
                         return acc;
                     }, {});
+
+                    Object.keys(groupedQuestions).forEach((subject) => {
+                        groupedQuestions[subject] = shuffleArray(groupedQuestions[subject]);
+                    });
 
                     setAllQuestions(groupedQuestions);
                     const subjectsList = Object.keys(groupedQuestions);
@@ -57,7 +82,9 @@ function ExamWindow() {
 
         fetchData();
 
-        // Timer logic
+        const [hours, minutes] = duration.split(':').map(Number);
+        setTime({ hours, minutes, seconds: 0 });
+
         timerRef.current = setInterval(() => {
             setTime((prevTime) => {
                 const { hours, minutes, seconds } = prevTime;
@@ -82,8 +109,8 @@ function ExamWindow() {
 
     const handleSubjectSelect = (subject) => {
         setSelectedSubject(subject);
-        setCurrentQuestions(allQuestions[subject] || []); // Update questions based on subject
-        setSelectedQuestionIndex(0); // Reset to the first question of the new subject
+        setCurrentQuestions(allQuestions[subject] || []);
+        setSelectedQuestionIndex(0);
     };
 
     const handleOptionChange = (option) => {
@@ -95,6 +122,16 @@ function ExamWindow() {
             },
         }));
         setError('');
+    };
+
+    const handleTheoryChange = (answer) => {
+        setResponses((prevResponses) => ({
+            ...prevResponses,
+            [selectedSubject]: {
+                ...(prevResponses[selectedSubject] || {}),
+                [selectedQuestionIndex]: { answer, status: 'typed' },
+            },
+        }));
     };
 
     const handleMarkForReview = () => {
@@ -130,8 +167,16 @@ function ExamWindow() {
     };
 
     const confirmSubmit = async () => {
+        const userEmail = currentUser.email; // Extract email from currentUser
+
+        // Validate email
+        if (!userEmail) {
+            alert('User email is not available. Cannot submit the exam.');
+            return;
+        }
+
         const resultData = {
-            userId: currentUser._id,
+            email: userEmail, // Use email instead of userId
             examName: examName,
             responses: responses,
         };
@@ -141,6 +186,7 @@ function ExamWindow() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentUser.token}`,
                 },
                 body: JSON.stringify(resultData),
             });
@@ -149,11 +195,15 @@ function ExamWindow() {
 
             const data = await response.json();
             console.log('Result submitted successfully:', data);
-            navigate('/success');
+            alert('Exam submitted successfully!');
+            navigate('/dashboard'); // Redirect after submission
         } catch (error) {
             console.error('Error submitting results:', error);
+            alert('Could not submit exam. Please try again later.');
         }
     };
+
+
 
     const formatTime = (time) => {
         const { hours, minutes, seconds } = time;
@@ -161,6 +211,10 @@ function ExamWindow() {
     };
 
     const selectedOption = responses[selectedSubject]?.[selectedQuestionIndex]?.option;
+
+    const shuffleArray = (array) => {
+        return array.sort(() => Math.random() - 0.5);
+    };
 
     return (
         <div className="flex mt-10 p-10" style={{ height: '80vh' }}>
@@ -191,20 +245,28 @@ function ExamWindow() {
                     <h3 className="text-xl font-bold">Question {selectedQuestionIndex + 1} of {currentQuestions.length} for {selectedSubject}</h3>
                     {currentQuestions.length > 0 && (
                         <>
-                            <p className="mt-2 mb-4">{currentQuestions[selectedQuestionIndex].question}</p>
+                            <p className="mt-2 mb-4">{currentQuestions[selectedQuestionIndex].text}</p>
                             <div className="flex flex-col space-y-2">
-                                {currentQuestions[selectedQuestionIndex].options.map((option, optionIndex) => (
-                                    <label key={optionIndex} className="flex items-center space-x-2">
-                                        <input
-                                            type="radio"
-                                            value={option}
-                                            checked={selectedOption === option}
-                                            onChange={() => handleOptionChange(option)}
-                                            className="form-radio"
-                                        />
-                                        <span>{option}</span>
-                                    </label>
-                                ))}
+                                {currentQuestions[selectedQuestionIndex].options && currentQuestions[selectedQuestionIndex].options.length > 0 ? (
+                                    currentQuestions[selectedQuestionIndex].options.map((option, optionIndex) => (
+                                        <label key={optionIndex} className="flex items-center space-x-2">
+                                            <input
+                                                type="radio"
+                                                value={option}
+                                                checked={selectedOption === option}
+                                                onChange={() => handleOptionChange(option)}
+                                                className="form-radio"
+                                            />
+                                            <span>{option}</span>
+                                        </label>
+                                    ))
+                                ) : (
+                                    <textarea
+                                        onChange={(e) => handleTheoryChange(e.target.value)}
+                                        placeholder="Type your answer here..."
+                                        className="border p-2 rounded-lg"
+                                    />
+                                )}
                             </div>
                             <div className="flex justify-between mt-4">
                                 <button

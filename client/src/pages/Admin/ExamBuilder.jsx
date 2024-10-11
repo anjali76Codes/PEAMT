@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CustomRadioButton from './CustomRadioButton';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
 
 function ExamBuilder() {
   const [questions, setQuestions] = useState([]);
@@ -11,6 +11,7 @@ function ExamBuilder() {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const { currentUser } = useSelector((state) => state.user);
   const adminEmail = currentUser?.email || '';
@@ -45,6 +46,7 @@ function ExamBuilder() {
     fetchExams();
   }, [adminEmail]);
 
+  // Fetch questions and subjects
   useEffect(() => {
     if (examName) {
       const fetchExistingQuestions = async () => {
@@ -62,8 +64,6 @@ function ExamBuilder() {
         }
       };
 
-      fetchExistingQuestions();
-
       const fetchSubjectsForExam = async () => {
         setLoading(true);
         try {
@@ -77,11 +77,40 @@ function ExamBuilder() {
         }
       };
 
+      fetchExistingQuestions();
       fetchSubjectsForExam();
     } else {
       setSubjects([]);
     }
   }, [examName]);
+
+  useEffect(() => {
+    // Get the converted JSON data from local storage
+    const jsonData = localStorage.getItem('convertedExamQuestions');
+
+    if (jsonData) {
+      const questionsFromJson = JSON.parse(jsonData);
+
+      // Transform the JSON data to match your question format
+      const formattedQuestions = questionsFromJson.map((q, index) => ({
+        id: questions.length + index + 1, // Ensure new IDs are unique
+        text: q.question,
+        type: q.choices.length > 0 ? 'MCQ' : 'Theory',
+        options: q.choices.map(choice => choice.choice),
+        correctAnswer: null, // Set this as needed
+        marks: 0, // Default or fetched from your JSON
+        difficulty: 'Medium', // Default or fetched from your JSON
+        answerText: '',
+        subject: ''
+      }));
+
+      // Append new questions to the existing ones
+      setQuestions(prevQuestions => [...prevQuestions, ...formattedQuestions]);
+
+      // Clear the stored data after using it
+      localStorage.removeItem('convertedExamQuestions');
+    }
+  }, []);
 
   const handleExamNameChange = (event) => {
     setExamName(event.target.value);
@@ -176,6 +205,8 @@ function ExamBuilder() {
       const response = await axios.post('/api/examQuestions', data);
       if (response.status === 200 || response.status === 201) {
         alert('Exam questions submitted successfully');
+        // Navigate back to the specific exam route after submission
+        navigate(`/exam-builder?examName=${examName}`);
       } else {
         alert('Failed to submit exam questions');
       }

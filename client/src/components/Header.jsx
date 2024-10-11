@@ -12,18 +12,19 @@ export default function Header() {
     const profilePicUrl = currentUser?.isAdmin ? ADMIN_PROFILE_PIC_URL : currentUser?.profilePicture;
 
     // Check if the current route is /exam-builder
-    const isExamBuilder = location.pathname === '/exam-builder';
-    const converter = location.pathname === '/converter';
+    const isExamBuilder = location.pathname.startsWith('/exam-builder'); // Modified to handle sub-routes
+
+    // Get the exam name from the URL
+    const examName = new URLSearchParams(location.search).get('examName');
 
     return (
         <div className='bg-cyan-600 bg-opacity-70 h-20 fixed top-0 left-0 right-0 z-10 transition-colors duration-300 hover:bg-cyan-500 hover:bg-opacity-80'>
             <div className='flex justify-between items-center mx-auto'>
                 <Link to='/'>
-                <img src={scorezyLogo} className='w-40 ml-6'></img>
-                    {/* <h1 className='font-bold text-4xl text-white'></h1> */}
+                    <img src={scorezyLogo} className='w-40 ml-6' />
                 </Link>
                 <ul className='flex gap-12 items-end p-3'>
-                    {!isExamBuilder && !converter && (
+                    {!isExamBuilder && (
                         <>
                             <Link to='/'>
                                 <button className='button'>
@@ -39,10 +40,10 @@ export default function Header() {
                     )}
                     {isExamBuilder && (
                         <div className='flex gap-4'>
-                            <Link to='/converter'>
-                            <button className='button'>
-                                <li>Upload Paper</li>
-                            </button>
+                            <Link to={`/converter?examName=${encodeURIComponent(examName)}`}>
+                                <button className='button'>
+                                    <li>Upload Paper</li>
+                                </button>
                             </Link>
                             <button className='button'>
                                 <li>Save Paper</li>

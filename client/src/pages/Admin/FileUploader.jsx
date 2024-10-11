@@ -1,14 +1,18 @@
+// FileUploader.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import JsonPreview from './JsonPreview'; // Adjust the path as needed
 import FilePreview from './FilePreview'; // Import the new FilePreview component
+import { useNavigate, useLocation } from 'react-router-dom';
 
-function FileUploader() {
+function FileUploader({ onJsonContentChange }) {
   const [file, setFile] = useState(null);
   const [jsonContent, setJsonContent] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
+  const location = useLocation(); // Get the current location
 
   const handleFile = (file) => {
     setFile(file);
@@ -33,9 +37,19 @@ function FileUploader() {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Response Data:', response.data); // Debugging line
+      console.log('Response Data:', response.data);
       toast.success('File converted to JSON successfully');
-      setJsonContent(response.data.json); // Store JSON content
+      const convertedJson = response.data.json;
+
+      // Store JSON in local storage
+      localStorage.setItem('convertedExamQuestions', JSON.stringify(convertedJson));
+
+      // Get the exam name from the query parameters
+      const params = new URLSearchParams(location.search);
+      const examName = params.get('examName');
+
+      // Redirect to ExamBuilder with the examName
+      navigate(`/exam-builder?examName=${examName}`);
     } catch (error) {
       toast.error('Error converting file to JSON');
       console.error('Error converting file:', error);
@@ -62,6 +76,7 @@ function FileUploader() {
     setFile(null);
     setJsonContent(null);
     document.getElementById('fileInput').value = ''; // Clear the file input
+    onJsonContentChange(null); // Clear the JSON content in parent
   };
 
   return (
