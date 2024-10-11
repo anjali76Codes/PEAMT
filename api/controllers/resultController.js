@@ -1,6 +1,6 @@
-// controllers/resultController.js
 import Result from '../models/Result.model.js';
 import ExamQuestions from '../models/examQuestions.model.js';
+import { sendEmail } from '../utils/emailSender.js'; // Ensure to import sendEmail
 
 export const submitResult = async (req, res) => {
     const { userId, examName, responses } = req.body;
@@ -46,12 +46,24 @@ export const submitResult = async (req, res) => {
 
         await result.save(); // Save the result to the database
 
+        // Fetch user email using userId
+        const user = await User.findById(userId); // Ensure to import the User model
+        if (user) {
+            // Prepare the email content
+            const subject = `Your Exam Result for ${examName}`;
+            const text = `Your scores are: ${JSON.stringify(subjectScores)}`;
+
+            // Send the email with the result
+            await sendEmail(user.email, subject, text);
+        }
+
         res.status(201).json(result); // Respond with the newly created result
     } catch (error) {
         console.error("Error in submitResult:", error.message);
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 };
+
 
 export const getResults = async (req, res) => {
     const { userId } = req.query; // Changed from req.params to req.query

@@ -7,5 +7,6 @@ const router = express.Router();
 
 router.post('/submitResult', submitResult);
 router.get('/results', getResults);
+// router.get('/admin/results', getAdminResults); 
 
 export default router;
