@@ -4,7 +4,7 @@ import axios from 'axios';
 
 function StartPage() {
     const location = useLocation();
-    const { examName } = location.state || { examName: 'defaultExam' }; // Get the exam name from state
+    const { examName, duration } = location.state || { examName: 'defaultExam', duration: '01:00:00' }; // Get exam name and duration from state
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
 
@@ -22,7 +22,7 @@ function StartPage() {
                 enteredCode: code,
             });
             if (response.data.valid) {
-                navigate('/exam-window', { state: { examName, code } }); // Pass examName and code to ExamWindow
+                navigate('/exam-window', { state: { examName, duration } }); // Pass examName and duration to ExamWindow
             } else {
                 setError('Invalid secure code. Please try again.');
             }
@@ -36,6 +36,7 @@ function StartPage() {
         <div className="relative flex flex-col items-center justify-center h-screen bg-gray-50 p-4">
             <div className="p-6 bg-white shadow-lg rounded-lg w-full max-w-md border border-gray-200">
                 <h1 className="text-4xl font-bold text-blue-700 mb-4">Welcome to the Exam: {examName}</h1>
+                <p className="text-lg text-gray-700 mb-2">Duration: {duration}</p> {/* Display the exam duration */}
                 <p className="text-lg text-gray-700 mb-6">Please review the rules below before starting.</p>
 
                 {error && <p className="text-red-600 mb-4 text-center">{error}</p>}

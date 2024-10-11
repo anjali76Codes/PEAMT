@@ -4,27 +4,50 @@ import { useSelector } from 'react-redux';
 
 function ExamWindow() {
     const location = useLocation();
-    const { examName } = location.state || { examName: 'defaultExam' };
+    const { examName, duration } = location.state || { examName: 'defaultExam', duration: '01:00:00' };
     const { currentUser } = useSelector((state) => state.user);
     const [allQuestions, setAllQuestions] = useState({});
-    const [subjects, setSubjects] = useState([]); // List of subjects
-    const [selectedSubject, setSelectedSubject] = useState(''); // Currently selected subject
-    const [currentQuestions, setCurrentQuestions] = useState([]); // Questions of selected subject
+    const [subjects, setSubjects] = useState([]);
+    const [selectedSubject, setSelectedSubject] = useState('');
+    const [currentQuestions, setCurrentQuestions] = useState([]);
     const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
     const [responses, setResponses] = useState({});
     const [markedForReview, setMarkedForReview] = useState({});
     const [error, setError] = useState('');
-    const [time, setTime] = useState({ hours: 1, minutes: 0, seconds: 0 });
-    const [warningShown, setWarningShown] = useState(false);
+    const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const [showAutoSubmitPopup, setShowAutoSubmitPopup] = useState(false);
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
     const timerRef = useRef();
     const navigate = useNavigate();
 
+    const [alertCount, setAlertCount] = useState({
+        visibility: 0,
+        blur: 0,
+        copy: 0,
+        refresh: 0,
+        fullscreen: 0,
+    });
+
+    // Uncomment the next line to disable all security features
+    // const securityFeaturesEnabled = false; // Set to true to enable security features
+    const securityFeaturesEnabled = true; // Set to true to enable security features
+
     useEffect(() => {
+        // Check if user is logged in
+        if (!currentUser || !currentUser._id) {
+            navigate('/login');
+            return;
+        }
+
         const fetchData = async () => {
             try {
-                const response = await fetch(`/api/examQuestions?examName=${encodeURIComponent(examName)}`);
+                const response = await fetch(`/api/examQuestions?examName=${encodeURIComponent(examName)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentUser.token}`, // Ensure authorization
+                    },
+                });
+
                 if (!response.ok) throw new Error('Failed to fetch questions');
                 const data = await response.json();
 
@@ -40,7 +63,6 @@ function ExamWindow() {
                     const subjectsList = Object.keys(groupedQuestions);
                     setSubjects(subjectsList);
 
-                    // Initialize with the first subject's questions
                     if (subjectsList.length > 0) {
                         setSelectedSubject(subjectsList[0]);
                         setCurrentQuestions(groupedQuestions[subjectsList[0]]);
@@ -57,6 +79,10 @@ function ExamWindow() {
 
         fetchData();
 
+        // Initialize timer from duration
+        const [hours, minutes] = duration.split(':').map(Number);
+        setTime({ hours, minutes, seconds: 0 });
+
         // Timer logic
         timerRef.current = setInterval(() => {
             setTime((prevTime) => {
@@ -69,7 +95,7 @@ function ExamWindow() {
                     return { hours: hours - 1, minutes: 59, seconds: 59 };
                 } else {
                     clearInterval(timerRef.current);
-                    handleSubmit();
+                    handleSubmit(); // Automatically submit when time runs out
                     return prevTime;
                 }
             });
@@ -78,12 +104,101 @@ function ExamWindow() {
         return () => {
             clearInterval(timerRef.current);
         };
-    }, [examName]);
+    }, [examName, duration, currentUser, navigate]);
+
+    useEffect(() => {
+        if (!securityFeaturesEnabled) return;
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                setAlertCount((prev) => ({ ...prev, visibility: prev.visibility + 1 }));
+                if (alertCount.visibility < 1) {
+                    alert('Please do not switch tabs during the exam.');
+                }
+                if (alertCount.visibility >= 2) {
+                    handleAutoSubmit();
+                }
+            }
+        };
+
+        const handleBlur = () => {
+            setAlertCount((prev) => ({ ...prev, blur: prev.blur + 1 }));
+            if (alertCount.blur < 1) {
+                alert('Please do not switch to another application during the exam.');
+            }
+            if (alertCount.blur >= 2) {
+                handleAutoSubmit();
+            }
+        };
+
+        const handleCopy = (event) => {
+            event.preventDefault();
+            setAlertCount((prev) => ({ ...prev, copy: prev.copy + 1 }));
+            if (alertCount.copy < 1) {
+                alert('Copying text is not allowed during the exam.');
+            }
+        };
+
+        const handleKeyPress = (event) => {
+            if (event.key === 'F5' || event.key === 'r') {
+                event.preventDefault();
+                setAlertCount((prev) => ({ ...prev, refresh: prev.refresh + 1 }));
+                if (alertCount.refresh < 1) {
+                    alert('Refreshing the page is not allowed during the exam.');
+                }
+                if (alertCount.refresh >= 2) {
+                    handleAutoSubmit();
+                }
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setAlertCount((prev) => ({ ...prev, fullscreen: prev.fullscreen + 1 }));
+                if (alertCount.fullscreen < 1) {
+                    alert('Exiting fullscreen is not allowed during the exam.');
+                }
+                if (alertCount.fullscreen >= 2) {
+                    handleAutoSubmit();
+                }
+            }
+            if (event.key === 'F11') {
+                event.preventDefault();
+                alert('Fullscreen mode is mandatory during the exam.');
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleBlur);
+        document.addEventListener('copy', handleCopy);
+        document.addEventListener('keydown', handleKeyPress);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleBlur);
+            document.removeEventListener('copy', handleCopy);
+            document.removeEventListener('keydown', handleKeyPress);
+        };
+    }, [alertCount, securityFeaturesEnabled]);
+
+    const handleAutoSubmit = () => {
+        if (alertCount.visibility >= 3 || alertCount.blur >= 3 || alertCount.refresh >= 3) {
+            setShowAutoSubmitPopup(true);
+            setTimeout(() => {
+                confirmSubmit();
+            }, 3000);
+        }
+    };
 
     const handleSubjectSelect = (subject) => {
         setSelectedSubject(subject);
-        setCurrentQuestions(allQuestions[subject] || []); // Update questions based on subject
-        setSelectedQuestionIndex(0); // Reset to the first question of the new subject
+        setCurrentQuestions(allQuestions[subject] || []);
+        setSelectedQuestionIndex(0);
+        resetTimerForSubject();
+    };
+
+    const resetTimerForSubject = () => {
+        const [hours, minutes] = duration.split(':').map(Number);
+        const totalSeconds = hours * 3600 + minutes * 60;
+        setTime({ hours: Math.floor(totalSeconds / 3600), minutes: Math.floor((totalSeconds % 3600) / 60), seconds: totalSeconds % 60 });
     };
 
     const handleOptionChange = (option) => {
@@ -141,6 +256,7 @@ function ExamWindow() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentUser.token}`, // Ensure authorization
                 },
                 body: JSON.stringify(resultData),
             });
@@ -166,7 +282,7 @@ function ExamWindow() {
         <div className="flex mt-10 p-10" style={{ height: '80vh' }}>
             {showAutoSubmitPopup && (
                 <div className="fixed top-0 left-0 right-0 bg-yellow-300 text-black text-lg text-center p-4 z-50">
-                    Your exam is auto-submitting due to inactivity. Please wait...
+                    Your exam is auto-submitting due to excessive interruptions. Please wait...
                 </div>
             )}
             <div className="w-1/6 p-2 bg-gray-100" style={{ height: '100%', overflowY: 'auto' }}>

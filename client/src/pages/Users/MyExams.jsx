@@ -19,7 +19,7 @@ function MyExams() {
         try {
             const response = await fetch(`/api/regform/username/${currentUser.username}/exams/details`);
             if (!response.ok) {
-                throw new Error('Failed to fetch exam details');
+                throw new Error(`Error ${response.status}: Failed to fetch exam details`);
             }
             const data = await response.json();
             setExams(data || []);
@@ -35,7 +35,7 @@ function MyExams() {
     }, [currentUser.username]);
 
     const handleGiveExam = (exam) => {
-        navigate('/start', { state: { examName: exam.examName } });
+        navigate('/start', { state: { examName: exam.examName, duration: exam.duration } });
     };
 
     return (
@@ -69,7 +69,7 @@ function MyExams() {
                                     const isToday = today.toDateString() === examDate.toDateString();
 
                                     return (
-                                        <tr key={index} className="hover:bg-gray-50">
+                                        <tr key={exam.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 border-b">{exam.examName}</td>
                                             <td className="px-6 py-4 border-b">{exam.duration}</td>
                                             <td className="px-6 py-4 border-b">{exam.eligibility}</td>
