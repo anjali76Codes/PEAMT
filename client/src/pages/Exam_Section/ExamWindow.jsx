@@ -4,70 +4,30 @@ import { useSelector } from 'react-redux';
 
 function ExamWindow() {
     const location = useLocation();
-    const { examName, duration } = location.state || { examName: 'defaultExam', duration: '01:00:00' };
-    const { currentUser } = useSelector((state) => state.user);
-    const [allQuestions, setAllQuestions] = useState({});
-    const [subjects, setSubjects] = useState([]);
-    const [selectedSubject, setSelectedSubject] = useState('');
-    const [currentQuestions, setCurrentQuestions] = useState([]);
+    const { examName } = location.state || { examName: 'defaultExam' };
+    const { currentUser } = useSelector((state) => state.user); // Accessing current user from Redux
+    const [questions, setQuestions] = useState([]);
     const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
     const [responses, setResponses] = useState({});
     const [markedForReview, setMarkedForReview] = useState({});
     const [error, setError] = useState('');
-    const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
+    const [time, setTime] = useState({ hours: 1, minutes: 0, seconds: 0 });
+    const [warningShown, setWarningShown] = useState(false);
     const [showAutoSubmitPopup, setShowAutoSubmitPopup] = useState(false);
-    const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+    const [sessionTimeout, setSessionTimeout] = useState(null);
     const timerRef = useRef();
     const navigate = useNavigate();
 
-    const [alertCount, setAlertCount] = useState({
-        visibility: 0,
-        blur: 0,
-        copy: 0,
-        refresh: 0,
-        fullscreen: 0,
-    });
-
-    // Uncomment the next line to disable all security features
-    // const securityFeaturesEnabled = false; // Set to true to enable security features
-    const securityFeaturesEnabled = true; // Set to true to enable security features
-
     useEffect(() => {
-        // Check if user is logged in
-        if (!currentUser || !currentUser._id) {
-            navigate('/login');
-            return;
-        }
-
         const fetchData = async () => {
             try {
-                const response = await fetch(`/api/examQuestions?examName=${encodeURIComponent(examName)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${currentUser.token}`, // Ensure authorization
-                    },
-                });
-
-                if (!response.ok) throw new Error('Failed to fetch questions');
+                const response = await fetch(`/api/examQuestions?examName=${encodeURIComponent(examName)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch questions');
+                }
                 const data = await response.json();
-
                 if (data.questions && data.questions.length > 0) {
-                    const groupedQuestions = data.questions.reduce((acc, question) => {
-                        const subject = question.subject;
-                        if (!acc[subject]) acc[subject] = [];
-                        acc[subject].push(question);
-                        return acc;
-                    }, {});
-
-                    setAllQuestions(groupedQuestions);
-                    const subjectsList = Object.keys(groupedQuestions);
-                    setSubjects(subjectsList);
-
-                    if (subjectsList.length > 0) {
-                        setSelectedSubject(subjectsList[0]);
-                        setCurrentQuestions(groupedQuestions[subjectsList[0]]);
-                        setSelectedQuestionIndex(0);
-                    }
+                    setQuestions(data.questions);
                 } else {
                     setError(`No questions available for the exam: ${examName}.`);
                 }
@@ -79,11 +39,6 @@ function ExamWindow() {
 
         fetchData();
 
-        // Initialize timer from duration
-        const [hours, minutes] = duration.split(':').map(Number);
-        setTime({ hours, minutes, seconds: 0 });
-
-        // Timer logic
         timerRef.current = setInterval(() => {
             setTime((prevTime) => {
                 const { hours, minutes, seconds } = prevTime;
@@ -95,150 +50,173 @@ function ExamWindow() {
                     return { hours: hours - 1, minutes: 59, seconds: 59 };
                 } else {
                     clearInterval(timerRef.current);
-                    handleSubmit(); // Automatically submit when time runs out
+                    handleSubmit(); // Auto-submit when time runs out
                     return prevTime;
                 }
             });
         }, 1000);
 
+        const handleActivity = () => {
+            clearTimeout(sessionTimeout);
+            setSessionTimeout(setTimeout(() => {
+                alert("Your session has timed out due to inactivity.");
+                navigate('/logout'); // Redirect to logout or login page
+            }, 15 * 60 * 1000)); // 15 minutes timeout
+        };
+
+        window.addEventListener('mousemove', handleActivity);
+        window.addEventListener('keypress', handleActivity);
+
+        // Prevent copy-paste
+        const preventCopyPaste = (event) => {
+            event.preventDefault();
+            alert("Copying and pasting are not allowed during the exam.");
+        };
+
+        window.addEventListener('copy', preventCopyPaste);
+        window.addEventListener('paste', preventCopyPaste);
+        window.addEventListener('cut', preventCopyPaste);
+
+        const handleKeyLock = (event) => {
+            if (
+                event.key === "Escape" ||
+                event.key === "F5" ||
+                (event.ctrlKey && event.key === "r")
+            ) {
+                event.preventDefault();
+                alert("Navigation is disabled during the exam. Please stay on this page.");
+            }
+        };
+
+        const handleVisibilityChange = (event) => {
+            if (document.visibilityState === 'hidden') {
+                event.preventDefault();
+                if (warningShown) {
+                    setShowAutoSubmitPopup(true);
+                    setTimeout(() => {
+                        handleSubmit(); // Auto-submit after showing the popup
+                    }, 6000); // 6 seconds
+                } else {
+                    const confirmation = window.confirm("Switching tabs is not allowed during the exam. Are you sure you want to leave this tab?");
+                    if (!confirmation) {
+                        setWarningShown(true);
+                        alert("Please stay on this page during the exam.");
+                    }
+                }
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyLock);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        const requestFullscreen = () => {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            }
+        };
+
+        requestFullscreen();
+
         return () => {
             clearInterval(timerRef.current);
+            clearTimeout(sessionTimeout);
+            window.removeEventListener('mousemove', handleActivity);
+            window.removeEventListener('keypress', handleActivity);
+            window.removeEventListener('copy', preventCopyPaste);
+            window.removeEventListener('paste', preventCopyPaste);
+            window.removeEventListener('cut', preventCopyPaste);
+            window.removeEventListener("keydown", handleKeyLock);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [examName, duration, currentUser, navigate]);
+    }, [examName, warningShown, sessionTimeout]);
 
-    useEffect(() => {
-        if (!securityFeaturesEnabled) return;
+    const handleQuestionSelect = (index) => {
+        setSelectedQuestionIndex(index);
+        setError('');
+    };
 
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'hidden') {
-                setAlertCount((prev) => ({ ...prev, visibility: prev.visibility + 1 }));
-                if (alertCount.visibility < 1) {
-                    alert('Please do not switch tabs during the exam.');
-                }
-                if (alertCount.visibility >= 2) {
-                    handleAutoSubmit();
-                }
-            }
-        };
-
-        const handleBlur = () => {
-            setAlertCount((prev) => ({ ...prev, blur: prev.blur + 1 }));
-            if (alertCount.blur < 1) {
-                alert('Please do not switch to another application during the exam.');
-            }
-            if (alertCount.blur >= 2) {
-                handleAutoSubmit();
-            }
-        };
-
-        const handleCopy = (event) => {
-            event.preventDefault();
-            setAlertCount((prev) => ({ ...prev, copy: prev.copy + 1 }));
-            if (alertCount.copy < 1) {
-                alert('Copying text is not allowed during the exam.');
-            }
-        };
-
-        const handleKeyPress = (event) => {
-            if (event.key === 'F5' || event.key === 'r') {
-                event.preventDefault();
-                setAlertCount((prev) => ({ ...prev, refresh: prev.refresh + 1 }));
-                if (alertCount.refresh < 1) {
-                    alert('Refreshing the page is not allowed during the exam.');
-                }
-                if (alertCount.refresh >= 2) {
-                    handleAutoSubmit();
-                }
-            }
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                setAlertCount((prev) => ({ ...prev, fullscreen: prev.fullscreen + 1 }));
-                if (alertCount.fullscreen < 1) {
-                    alert('Exiting fullscreen is not allowed during the exam.');
-                }
-                if (alertCount.fullscreen >= 2) {
-                    handleAutoSubmit();
-                }
-            }
-            if (event.key === 'F11') {
-                event.preventDefault();
-                alert('Fullscreen mode is mandatory during the exam.');
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('blur', handleBlur);
-        document.addEventListener('copy', handleCopy);
-        document.addEventListener('keydown', handleKeyPress);
-
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('blur', handleBlur);
-            document.removeEventListener('copy', handleCopy);
-            document.removeEventListener('keydown', handleKeyPress);
-        };
-    }, [alertCount, securityFeaturesEnabled]);
-
-    const handleAutoSubmit = () => {
-        if (alertCount.visibility >= 3 || alertCount.blur >= 3 || alertCount.refresh >= 3) {
-            setShowAutoSubmitPopup(true);
-            setTimeout(() => {
-                confirmSubmit();
-            }, 3000);
+    const handleSaveResponse = () => {
+        const currentResponse = responses[selectedQuestionIndex] || {};
+        if (!currentResponse.option) {
+            setError('Please select an option before proceeding.');
+            return;
         }
-    };
-
-    const handleSubjectSelect = (subject) => {
-        setSelectedSubject(subject);
-        setCurrentQuestions(allQuestions[subject] || []);
-        setSelectedQuestionIndex(0);
-        resetTimerForSubject();
-    };
-
-    const resetTimerForSubject = () => {
-        const [hours, minutes] = duration.split(':').map(Number);
-        const totalSeconds = hours * 3600 + minutes * 60;
-        setTime({ hours: Math.floor(totalSeconds / 3600), minutes: Math.floor((totalSeconds % 3600) / 60), seconds: totalSeconds % 60 });
+        setResponses({
+            ...responses,
+            [selectedQuestionIndex]: { ...currentResponse, status: 'saved' }
+        });
+        setSelectedQuestionIndex((prevIndex) => Math.min(prevIndex + 1, questions.length - 1));
+        setError('');
     };
 
     const handleOptionChange = (option) => {
-        setResponses((prevResponses) => ({
-            ...prevResponses,
-            [selectedSubject]: {
-                ...(prevResponses[selectedSubject] || {}),
-                [selectedQuestionIndex]: { option, status: 'selected' },
-            },
-        }));
+        const currentResponse = responses[selectedQuestionIndex] || {};
+        setResponses({
+            ...responses,
+            [selectedQuestionIndex]: { option, status: option ? 'selected' : 'skipped' }
+        });
         setError('');
     };
 
     const handleMarkForReview = () => {
-        setMarkedForReview((prevMarked) => ({
-            ...prevMarked,
-            [selectedSubject]: {
-                ...(prevMarked[selectedSubject] || {}),
-                [selectedQuestionIndex]: true,
-            },
-        }));
+        const currentResponse = responses[selectedQuestionIndex] || {};
+        setMarkedForReview({
+            ...markedForReview,
+            [selectedQuestionIndex]: true
+        });
+        if (!currentResponse.option) {
+            setResponses({
+                ...responses,
+                [selectedQuestionIndex]: { ...currentResponse, status: 'skipped' }
+            });
+        }
+        setSelectedQuestionIndex((prevIndex) => Math.min(prevIndex + 1, questions.length - 1));
+        setError('');
     };
 
     const handlePrevious = () => {
-        if (selectedQuestionIndex > 0) {
-            setSelectedQuestionIndex((prevIndex) => prevIndex - 1);
-        } else {
-            alert('This is the first question in the subject.');
-        }
+        setSelectedQuestionIndex(Math.max(selectedQuestionIndex - 1, 0));
         setError('');
     };
 
     const handleNext = () => {
-        if (selectedQuestionIndex < currentQuestions.length - 1) {
-            setSelectedQuestionIndex((prevIndex) => prevIndex + 1);
+        const currentResponse = responses[selectedQuestionIndex] || {};
+        if (currentResponse.option) {
+            setResponses({
+                ...responses,
+                [selectedQuestionIndex]: { ...currentResponse, status: 'saved' }
+            });
         } else {
-            alert('You have completed all questions for this subject.');
+            setResponses({
+                ...responses,
+                [selectedQuestionIndex]: { ...currentResponse, status: 'skipped' }
+            });
         }
+        setSelectedQuestionIndex((prevIndex) => Math.min(prevIndex + 1, questions.length - 1));
         setError('');
     };
+
+    const handleSaveAndNext = () => {
+        const currentResponse = responses[selectedQuestionIndex] || {};
+        if (!currentResponse.option) {
+            setError('Please select an option before proceeding.');
+            return;
+        }
+        setResponses({
+            ...responses,
+            [selectedQuestionIndex]: { ...currentResponse, status: 'saved' }
+        });
+        setSelectedQuestionIndex((prevIndex) => Math.min(prevIndex + 1, questions.length - 1));
+        setError('');
+    };
+
+    const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
 
     const handleSubmit = () => {
         setShowConfirmSubmit(true);
@@ -246,9 +224,9 @@ function ExamWindow() {
 
     const confirmSubmit = async () => {
         const resultData = {
-            userId: currentUser._id,
-            examName: examName,
-            responses: responses,
+            userId: currentUser._id, // Use currentUser from useSelector
+            examName: examName, // Use the actual exam name
+            responses: responses, // Actual responses from the user
         };
 
         try {
@@ -256,16 +234,17 @@ function ExamWindow() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${currentUser.token}`, // Ensure authorization
                 },
                 body: JSON.stringify(resultData),
             });
 
-            if (!response.ok) throw new Error('Failed to submit results');
+            if (!response.ok) {
+                throw new Error('Failed to submit results');
+            }
 
             const data = await response.json();
             console.log('Result submitted successfully:', data);
-            navigate('/success');
+            navigate('/submit-confirmation'); // Redirect on success, modify as needed
         } catch (error) {
             console.error('Error submitting results:', error);
         }
@@ -276,108 +255,118 @@ function ExamWindow() {
         return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     };
 
-    const selectedOption = responses[selectedSubject]?.[selectedQuestionIndex]?.option;
-
+    const currentQuestion = questions[selectedQuestionIndex];
+    const selectedOption = responses[selectedQuestionIndex]?.option;
     return (
         <div className="flex mt-10 p-10" style={{ height: '80vh' }}>
             {showAutoSubmitPopup && (
                 <div className="fixed top-0 left-0 right-0 bg-yellow-300 text-black text-lg text-center p-4 z-50">
-                    Your exam is auto-submitting due to excessive interruptions. Please wait...
+                    Your exam is auto-submitting due to inactivity. Please wait...
                 </div>
             )}
             <div className="w-1/6 p-2 bg-gray-100" style={{ height: '100%', overflowY: 'auto' }}>
                 <div className="bg-gray-200 p-4 rounded-lg shadow-md h-full">
-                    <h3 className="text-xl font-semibold mb-4">Subjects</h3>
+                    <h3 className="text-xl font-semibold mb-4">Questions</h3>
                     {error && <p className="text-red-500">{error}</p>}
-                    <div className="grid grid-cols-1 gap-2">
-                        {subjects.map((subject, index) => (
-                            <button
-                                key={index}
-                                onClick={() => handleSubjectSelect(subject)}
-                                className={`px-4 py-2 rounded-lg text-white ${selectedSubject === subject ? 'bg-blue-600' : 'bg-gray-500'} hover:bg-opacity-75`}
-                            >
-                                {subject}
-                            </button>
-                        ))}
+                    <div className="grid grid-cols-3 gap-2">
+                        {questions.map((_, index) => {
+                            const isMarked = markedForReview[index];
+                            const isSaved = responses[index]?.status === 'saved';
+                            const hasNoOption = !responses[index]?.option;
+                            let buttonColor = isSaved
+                                ? 'bg-green-500'
+                                : isMarked
+                                    ? hasNoOption ? 'bg-red-500' : 'bg-orange-500'
+                                    : 'bg-blue-500';
+
+                            return (
+                                <button
+                                    key={index}
+                                    onClick={() => handleQuestionSelect(index)}
+                                    className={`px-4 py-2 rounded-lg text-white ${buttonColor} hover:bg-opacity-75`}
+                                >
+                                    {index + 1}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
-            <div className="w-4/6 p-4">
-                <div className="bg-white shadow-md p-4 rounded-lg h-full">
-                    <h3 className="text-xl font-bold">Question {selectedQuestionIndex + 1} of {currentQuestions.length} for {selectedSubject}</h3>
-                    {currentQuestions.length > 0 && (
-                        <>
-                            <p className="mt-2 mb-4">{currentQuestions[selectedQuestionIndex].question}</p>
-                            <div className="flex flex-col space-y-2">
-                                {currentQuestions[selectedQuestionIndex].options.map((option, optionIndex) => (
-                                    <label key={optionIndex} className="flex items-center space-x-2">
-                                        <input
-                                            type="radio"
-                                            value={option}
-                                            checked={selectedOption === option}
-                                            onChange={() => handleOptionChange(option)}
-                                            className="form-radio"
-                                        />
-                                        <span>{option}</span>
-                                    </label>
-                                ))}
+            <div className="w-3/4 p-2 relative" style={{ height: '100%', overflowY: 'auto' }}>
+                <div className="absolute top-4 right-4 text-lg font-semibold">{formatTime(time)}</div>
+                <div className="flex flex-col h-full p-0 bg-white rounded-lg shadow-md">
+                    <h3 className="ml-10 text-2xl font-semibold mb-4">Question {selectedQuestionIndex + 1}</h3>
+                    <p className="ml-10 text-lg mb-4">{currentQuestion?.text}</p>
+
+                    {error && <p className="text-red-500 ml-10 mb-4">Error: {error}</p>}
+
+                    <div className="space-y-2 ml-10 mb-4">
+                        {currentQuestion?.options.map((option, index) => (
+                            <div key={index} className="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id={`option${index}`}
+                                    name="options"
+                                    value={option}
+                                    checked={selectedOption === option}
+                                    onChange={() => handleOptionChange(option)}
+                                    className="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                />
+                                <label htmlFor={`option${index}`} className="text-lg">{option}</label>
                             </div>
-                            <div className="flex justify-between mt-4">
-                                <button
-                                    onClick={handlePrevious}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                                    disabled={selectedQuestionIndex === 0}
-                                >
-                                    Previous
-                                </button>
-                                <button
-                                    onClick={handleNext}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                                    disabled={selectedQuestionIndex === currentQuestions.length - 1}
-                                >
-                                    Next
-                                </button>
-                                <button
-                                    onClick={handleMarkForReview}
-                                    className={`px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 ${markedForReview[selectedSubject]?.[selectedQuestionIndex] ? 'opacity-50' : ''}`}
-                                >
-                                    {markedForReview[selectedSubject]?.[selectedQuestionIndex] ? 'Marked' : 'Mark for Review'}
-                                </button>
-                            </div>
-                        </>
-                    )}
+                        ))}
+                    </div>
+                    <div className="flex justify-between mt-auto space-2 mb-4 ml-10 mr-10">
+                        <button
+                            onClick={handlePrevious}
+                            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            onClick={handleMarkForReview}
+                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                        >
+                            Mark for Review
+                        </button>
+                        <button
+                            onClick={handleSaveAndNext}
+                            className={`px-4 py-2 ${selectedOption ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg`}
+                        >
+                            Save & Next
+                        </button>
+                        <button
+                            onClick={handleNext}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                        >
+                            Next
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                            Submit
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div className="w-1/6 p-2 bg-gray-100 flex flex-col justify-between">
-                <div className="bg-gray-200 p-4 rounded-lg shadow-md">
-                    <h3 className="text-xl font-semibold mb-4">Timer</h3>
-                    <p className="text-2xl font-bold">{formatTime(time)}</p>
-                </div>
-                <button
-                    onClick={() => setShowConfirmSubmit(true)}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 mt-4"
-                >
-                    Submit Exam
-                </button>
             </div>
 
             {showConfirmSubmit && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg">
-                        <h3 className="text-xl font-bold mb-4">Are you sure you want to submit?</h3>
-                        <p>Once you submit, you will not be able to change your answers.</p>
-                        <div className="mt-6 flex justify-between">
+                        <h2 className="text-lg font-semibold mb-4">Are you sure you want to submit your exam?</h2>
+                        <div className="flex justify-end space-x-4">
                             <button
                                 onClick={confirmSubmit}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                             >
-                                Yes, Submit
+                                Yes
                             </button>
                             <button
                                 onClick={() => setShowConfirmSubmit(false)}
-                                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                             >
-                                Cancel
+                                No
                             </button>
                         </div>
                     </div>
