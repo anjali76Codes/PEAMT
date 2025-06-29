@@ -13,6 +13,7 @@ import examRoutes from './routes/examRoutes.js';
 import examQuestions from './routes/examQuestions.route.js'
 import uploadRoutes from './routes/uploadRoutes.js';
 import resultRoutes from './routes/resultRoutes.js'; // Add this line
+import emailRoutes from './routes/emailRoutes.js';
 
 
 
@@ -44,6 +45,7 @@ app.use('/api/exams', examRoutes);
 app.use('/api/examQuestions', examQuestions);
 app.use('/api/convert', uploadRoutes);
 app.use('/api', resultRoutes); // Add this line
+app.use('/api', emailRoutes);
 
 
 app.get('*', (req, res) => {

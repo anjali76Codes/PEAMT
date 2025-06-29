@@ -39,7 +39,7 @@ function PopupModel({ isOpen, onClose, formData }) {
                 <p className="mb-4">Your form has been submitted successfully!</p>
                 <button
                     onClick={handleDownload}
-                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2 hover:bg-green-600 transition"
+                    className="bg-green-500 text-white px-4 py-2 rounded-3xl mr-2 hover:bg-green-600 transition"
                 >
                     Download Form Data
                 </button>

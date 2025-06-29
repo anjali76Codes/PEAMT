@@ -3,12 +3,12 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 const gradientPatterns = [
-    'bg-gradient-to-r from-purple-500 to-indigo-500',
-    'bg-gradient-to-r from-orange-400 to-yellow-500',
-    'bg-gradient-to-r from-teal-400 to-blue-500',
-    'bg-gradient-to-r from-pink-500 to-purple-600',
-    'bg-gradient-to-r from-green-400 to-blue-600',
-    'bg-gradient-to-r from-red-400 to-yellow-600',
+    'bg-gradient-to-b from-purple-800 to-indigo-400/75',
+    'bg-gradient-to-b from-pink-800 to-pink-400/75',
+    'bg-gradient-to-b from-orange-600 to-yellow-500/75',
+    'bg-gradient-to-b from-teal-700 to-blue-500/75',
+    'bg-gradient-to-b from-green-700 to-green-400/75',
+    'bg-gradient-to-b from-red-600 to-yellow-400/75',
 ];
 
 const ExamCardDisplay = ({ exams }) => {
@@ -74,7 +74,7 @@ const ExamCardDisplay = ({ exams }) => {
         return (
             <div
                 key={index}
-                className={`${cardGradient} text-white shadow-lg rounded-xl p-6 hover:shadow-2xl transition-transform transform hover:scale-105`}
+                className={`${cardGradient} text-white border-4 shadow-lg rounded-3xl p-6 hover:shadow-2xl transition-transform transform hover:scale-105`}
             >
                 <div className="text-center mb-6">
                     <h2 className="text-2xl font-bold">{examName}</h2>
@@ -100,7 +100,7 @@ const ExamCardDisplay = ({ exams }) => {
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="font-medium">Time left for registration:</span>
-                        <span className={`font-bold ${timeLeft <= 3 ? 'text-red-400' : 'text-white'}`}>
+                        <span className={`font-bold bg-green-400 px-4 rounded-3xl ${timeLeft <= 5 ? 'bg-red-300 text-red-900' : 'text-black'}`}>
                             {timeLeft} days
                         </span>
                     </div>
@@ -108,13 +108,13 @@ const ExamCardDisplay = ({ exams }) => {
 
                 <div className="text-center">
                     {isApplied ? (
-                        <button className="bg-gray-300 text-gray-700 font-semibold px-6 py-2 rounded-lg" disabled>
+                        <button className="bg-gray-300 text-gray-700 font-semibold px-6 py-2 rounded-3xl" disabled>
                             Already Applied
                         </button>
                     ) : (
                         <button
                             onClick={() => handleApplyClick(exam)}
-                            className="bg-white text-blue-600 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition-all"
+                            className="bg-white text-cyan-600 font-semibold px-6 py-2 rounded-3xl hover:bg-gray-200 transition-all"
                         >
                             Apply Now
                         </button>
@@ -127,7 +127,7 @@ const ExamCardDisplay = ({ exams }) => {
     return (
         <div className="p-8">
             <div className="flex justify-center mb-8">
-                <div className="bg-[#6C48C5] text-center py-3 px-6 rounded-full shadow-md w-2/3">
+                <div className="bg-sky-900 text-center text-white py-3 px-6 rounded-full shadow-md w-2/3">
                     <h1 className="text-2xl font-bold text-brown-600">Exams Overview</h1>
                 </div>
             </div>
@@ -165,7 +165,7 @@ const ExamCardDisplay = ({ exams }) => {
                         </div>
                         <button
                             onClick={handleClosePopup}
-                            className="bg-green-600 text-white font-semibold px-6 py-3 mt-6 rounded-lg hover:bg-green-700 transition-all w-full"
+                            className="bg-green-600 text-white font-semibold px-6 py-3 mt-6 rounded-3xl hover:bg-green-700 transition-all w-full"
                         >
                             Register
                         </button>

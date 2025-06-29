@@ -110,7 +110,7 @@ function ExamBuilder() {
       // Clear the stored data after using it
       localStorage.removeItem('convertedExamQuestions');
     }
-  }, []);
+  }, []); 
 
   const handleExamNameChange = (event) => {
     setExamName(event.target.value);
@@ -226,6 +226,7 @@ function ExamBuilder() {
     <div>
       <section className='flex flex-row justify-between m-2'>
         <h2 className='font-bold text-2xl'>Prepare Exam Paper</h2>
+        <button className='button' >Upload Paper </button>
         <button className='button' onClick={addQuestion}>Add Question</button>
       </section>
 

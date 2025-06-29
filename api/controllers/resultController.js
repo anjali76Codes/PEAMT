@@ -1,12 +1,12 @@
+// controllers/resultController.js
 import Result from '../models/Result.model.js';
 import ExamQuestions from '../models/examQuestions.model.js';
-import { sendEmail } from '../utils/emailSender.js'; // Ensure to import sendEmail
 
 export const submitResult = async (req, res) => {
-    const { userId, examName, responses } = req.body;
+    const { email, examName, responses } = req.body;
 
     // Validate input
-    if (!userId || !examName || !responses) {
+    if (!email || !examName || !responses) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -39,23 +39,12 @@ export const submitResult = async (req, res) => {
         // Create a new result record with scores by subject
         const result = new Result({
             examName,
-            userId,
+            email,
             scores: subjectScores, // Store subject-wise scores
             responses,
         });
 
         await result.save(); // Save the result to the database
-
-        // Fetch user email using userId
-        const user = await User.findById(userId); // Ensure to import the User model
-        if (user) {
-            // Prepare the email content
-            const subject = `Your Exam Result for ${examName}`;
-            const text = `Your scores are: ${JSON.stringify(subjectScores)}`;
-
-            // Send the email with the result
-            await sendEmail(user.email, subject, text);
-        }
 
         res.status(201).json(result); // Respond with the newly created result
     } catch (error) {
@@ -64,12 +53,11 @@ export const submitResult = async (req, res) => {
     }
 };
 
-
 export const getResults = async (req, res) => {
-    const { userId } = req.query; // Changed from req.params to req.query
+    const { userEmail } = req.query; // Fetch userEmail from query parameters
 
     try {
-        const results = await Result.find({ userId });
+        const results = await Result.find({ email: userEmail }); // Query by email
         res.status(200).json(results); // Return the results with a status of 200
     } catch (error) {
         console.error("Error in getResults:", error.message);

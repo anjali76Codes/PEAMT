@@ -12,4 +12,10 @@ export default defineConfig({
     },
   },
   plugins: [react()],
+  optimizeDeps: {
+    exclude: ['face-api.js'],
+  },
+  build: {
+    sourcemap: false,
+  },
 })

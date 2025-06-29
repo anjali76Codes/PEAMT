@@ -1,3 +1,4 @@
+// Import statements at the top of App.js
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -23,19 +24,25 @@ import MyExams from "./pages/Users/MyExams";
 import Result from './pages/Exam_Section/Result';
 import RegisteredUsers from "./pages/Admin/RegisteredUsers";
 
+// Import the FaceDetection component
+import FaceDetection from "./components/FaceDetection"; // Adjust the path if necessary
+
 function App() {
   const privatePassId = import.meta.env.VITE_PRIVATE_DASHBOARD_ID;
 
   return (
     <BrowserRouter>
       <Header />
-      <div className='pt-20'> {/* Adjusted padding-top to match header height */}
+      <div className='pt-20'>
         <Routes>
           {/* Public Routes */}
           <Route path='/' element={<Home />} />
           <Route path='/about' element={<About />} />
           <Route path='/sign-in' element={<SignIn />} />
           <Route path='/sign-up' element={<SignUp />} />
+
+          {/* Add the FaceDetection route here */}
+          <Route path='/face-detection' element={<FaceDetection />} />
 
           {/* Admin-only Routes */}
           <Route element={<AdminRoute />}>
@@ -66,7 +73,7 @@ function App() {
           <Route path={`/private-dashboard/${privatePassId}/admin-entry`} element={<AdminEntryForm />} />
 
           {/* Catch-all Route for 404 */}
-          <Route path='*' element={<Home />} /> {/* Optionally, you might want to use a 404 page */}
+          <Route path='*' element={<Home />} />
           <Route path="/result" element={<Result />} />
         </Routes>
       </div>

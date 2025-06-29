@@ -48,7 +48,7 @@ const About = () => {
                 {features.map((feature, index) => (
                     <div
                         key={index}
-                        className="relative bg-white rounded-xl shadow-lg overflow-hidden transform transition-transform duration-300 animate-fadeIn"
+                        className="relative  rounded-xl bg-sky-800 p-4 shadow-lg overflow-hidden transform transition-transform duration-300 animate-fadeIn"
                     >
                         <img
                             src={feature.imgSrc}

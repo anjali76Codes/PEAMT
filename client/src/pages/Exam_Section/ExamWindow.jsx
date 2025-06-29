@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import FaceDetection from '../../components/FaceDetection';
+import MouseTracker from '../../components/MouseTracker';
 
 function ExamWindow() {
     const location = useLocation();
@@ -8,6 +10,7 @@ function ExamWindow() {
     const { currentUser } = useSelector((state) => state.user);
     const [allQuestions, setAllQuestions] = useState({});
     const [subjects, setSubjects] = useState([]);
+    const [theoryAnswer, setTheoryAnswer] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
     const [currentQuestions, setCurrentQuestions] = useState([]);
     const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
@@ -19,6 +22,8 @@ function ExamWindow() {
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
     const timerRef = useRef();
     const navigate = useNavigate();
+    const videoRef = useRef();
+    const canvasRef = useRef();
 
     const [alertCount, setAlertCount] = useState({
         visibility: 0,
@@ -28,7 +33,7 @@ function ExamWindow() {
         fullscreen: 0,
     });
 
-    const securityFeaturesEnabled = true; // Set to true to enable security features
+    const securityFeaturesEnabled = false;
 
     useEffect(() => {
         if (!currentUser || !currentUser._id) {
@@ -94,7 +99,7 @@ function ExamWindow() {
                     return { hours: hours - 1, minutes: 59, seconds: 59 };
                 } else {
                     clearInterval(timerRef.current);
-                    handleSubmit(); // Automatically submit when time runs out
+                    handleSubmit();
                     return prevTime;
                 }
             });
@@ -205,6 +210,7 @@ function ExamWindow() {
     };
 
     const handleTheoryChange = (answer) => {
+        setTheoryAnswer(answer);
         setResponses((prevResponses) => ({
             ...prevResponses,
             [selectedSubject]: {
@@ -247,22 +253,21 @@ function ExamWindow() {
     };
 
     const confirmSubmit = async () => {
-        const userEmail = currentUser.email; // Extract email from currentUser
+        const userEmail = currentUser.email;
 
-        // Validate email
         if (!userEmail) {
             alert('User email is not available. Cannot submit the exam.');
             return;
         }
 
         const resultData = {
-            email: userEmail, // Use email instead of userId
+            email: userEmail,
             examName: examName,
             responses: responses,
         };
 
         try {
-            const response = await fetch('http://localhost:3000/api/submitResult', {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/submitResult`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -276,14 +281,12 @@ function ExamWindow() {
             const data = await response.json();
             console.log('Result submitted successfully:', data);
             alert('Exam submitted successfully!');
-            navigate('/dashboard'); // Redirect after submission
+            navigate('/dashboard');
         } catch (error) {
             console.error('Error submitting results:', error);
             alert('Could not submit exam. Please try again later.');
         }
     };
-
-
 
     const formatTime = (time) => {
         const { hours, minutes, seconds } = time;
@@ -295,6 +298,30 @@ function ExamWindow() {
     const shuffleArray = (array) => {
         return array.sort(() => Math.random() - 0.5);
     };
+
+    useEffect(() => {
+        const startVideo = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoRef.current.srcObject = stream;
+
+            const context = canvasRef.current.getContext('2d');
+            videoRef.current.addEventListener('loadeddata', () => {
+                setInterval(() => {
+                    context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+                }, 1000 / 30); // Draw at 30 FPS
+            });
+        };
+
+        startVideo();
+
+        return () => {
+            if (videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject;
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+        };
+    }, []);
 
     return (
         <div className="flex mt-10 p-10" style={{ height: '80vh' }}>
@@ -320,6 +347,8 @@ function ExamWindow() {
                     </div>
                 </div>
             </div>
+
+            <FaceDetection />
             <div className="w-4/6 p-4">
                 <div className="bg-white shadow-md p-4 rounded-lg h-full">
                     <h3 className="text-xl font-bold">Question {selectedQuestionIndex + 1} of {currentQuestions.length} for {selectedSubject}</h3>
@@ -327,7 +356,20 @@ function ExamWindow() {
                         <>
                             <p className="mt-2 mb-4">{currentQuestions[selectedQuestionIndex].text}</p>
                             <div className="flex flex-col space-y-2">
-                                {currentQuestions[selectedQuestionIndex].options && currentQuestions[selectedQuestionIndex].options.length > 0 ? (
+                                {currentQuestions[selectedQuestionIndex].options &&
+                                    (currentQuestions[selectedQuestionIndex].options.length === 0 ||
+                                        currentQuestions[selectedQuestionIndex].options.every(option => option === "")) ? (
+                                    <textarea
+                                        value={theoryAnswer}
+                                        onChange={(e) => handleTheoryChange(e.target.value)}
+                                        placeholder="Type your answer here..."
+                                        className="border p-2 rounded-lg w-full h-32 resize-none"
+                                        style={{ overflow: 'hidden' }}
+                                        onFocus={(e) => e.target.select()}
+                                        rows={1}
+                                        onInput={(e) => e.target.style.height = e.target.scrollHeight + 'px'}
+                                    />
+                                ) : (
                                     currentQuestions[selectedQuestionIndex].options.map((option, optionIndex) => (
                                         <label key={optionIndex} className="flex items-center space-x-2">
                                             <input
@@ -340,12 +382,6 @@ function ExamWindow() {
                                             <span>{option}</span>
                                         </label>
                                     ))
-                                ) : (
-                                    <textarea
-                                        onChange={(e) => handleTheoryChange(e.target.value)}
-                                        placeholder="Type your answer here..."
-                                        className="border p-2 rounded-lg"
-                                    />
                                 )}
                             </div>
                             <div className="flex justify-between mt-4">
@@ -374,6 +410,7 @@ function ExamWindow() {
                     )}
                 </div>
             </div>
+
             <div className="w-1/6 p-2 bg-gray-100 flex flex-col justify-between">
                 <div className="bg-gray-200 p-4 rounded-lg shadow-md">
                     <h3 className="text-xl font-semibold mb-4">Timer</h3>
@@ -386,6 +423,24 @@ function ExamWindow() {
                     Submit Exam
                 </button>
             </div>
+
+            {/* <div className="relative flex justify-center items-center h-full">
+                <video
+                    ref={videoRef}
+                    style={{
+                        width: '300px',
+                        height: 'auto',
+                        border: '2px solid white',
+                        borderRadius: '10px',
+                        zIndex: 10,
+                    }}
+                    autoPlay
+                    muted
+                />
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
+            </div> */}
+
+            <MouseTracker />
 
             {showConfirmSubmit && (
                 <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-50">
@@ -411,6 +466,6 @@ function ExamWindow() {
             )}
         </div>
     );
-}
+};
 
 export default ExamWindow;

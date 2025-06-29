@@ -1,4 +1,3 @@
-// FileUploader.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
@@ -27,12 +26,12 @@ function FileUploader({ onJsonContentChange }) {
       toast.error('No file selected');
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     try {
-      const response = await axios.post('http://localhost:3000/api/convert/convert', formData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/convert/convert`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -54,7 +53,7 @@ function FileUploader({ onJsonContentChange }) {
       toast.error('Error converting file to JSON');
       console.error('Error converting file:', error);
     }
-  };
+  };  
 
   const handleDragOver = (e) => {
     e.preventDefault();

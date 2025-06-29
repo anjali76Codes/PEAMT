@@ -40,7 +40,7 @@ function UserDashboard() {
         <div className="p-4">
             <button
                 onClick={() => navigate('/my-exams')}
-                className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
+                className="bg-sky-800 text-white font-semibold py-2 px-4 rounded-3xl hover:bg-sky-600 transition"
             >
                 Go to My Exams
             </button>

@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable'; // Optional for auto table creation
+import 'jspdf-autotable';
 
 function Result() {
     const { currentUser } = useSelector((state) => state.user);
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [email, setEmail] = useState('');
 
     useEffect(() => {
         const fetchResults = async () => {
             try {
-                const response = await fetch(`/api/results?userEmail=${encodeURIComponent(currentUser.email)}`); // Change to userEmail
+                const response = await fetch(`/api/results?userEmail=${encodeURIComponent(currentUser.email)}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch results');
                 }
@@ -30,27 +31,38 @@ function Result() {
 
     const downloadPDF = () => {
         const doc = new jsPDF();
-
         doc.setFontSize(20);
         doc.text("Your Exam Results", 14, 22);
 
         results.forEach((result, index) => {
             const tableData = Object.entries(result.scores || {}).map(([subject, score]) => [
-                subject,
-                score || 0 // Default score to 0 if undefined
+                subject, score || 0
             ]);
-
             doc.autoTable({
                 head: [['Subject', 'Score']],
                 body: tableData,
-                startY: 30 + (index * 50), // Adjust position for next table
+                startY: 30 + (index * 50),
             });
-
             doc.text(`Exam Name: ${result.examName}`, 14, doc.lastAutoTable.finalY + 10);
             doc.text(`Date: ${new Date(result.createdAt).toLocaleDateString()}`, 14, doc.lastAutoTable.finalY + 15);
         });
-
         doc.save('scorecard.pdf');
+    };
+
+    const sendEmail = async () => {
+        try {
+            const response = await fetch('/api/sendScorecard', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, results }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to send email');
+            }
+            alert('Scorecard sent successfully!');
+        } catch (err) {
+            alert(err.message);
+        }
     };
 
     if (loading) {
@@ -74,6 +86,19 @@ function Result() {
                     >
                         Download Scorecard as PDF
                     </button>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        className="border p-2 mb-4"
+                    />
+                    <button
+                        onClick={sendEmail}
+                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                        Send Scorecard via Email
+                    </button>
                     {results.map((result) => (
                         <div key={result._id} className="mb-6">
                             <h2 className="text-xl font-semibold mb-2">{result.examName}</h2>
@@ -89,7 +114,7 @@ function Result() {
                                     {Object.entries(result.scores || {}).map(([subject, score]) => (
                                         <tr key={subject}>
                                             <td className="border px-4 py-2">{subject}</td>
-                                            <td className="border px-4 py-2">{score || 0}</td> {/* Ensure score defaults to 0 */}
+                                            <td className="border px-4 py-2">{score || 0}</td>
                                         </tr>
                                     ))}
                                 </tbody>

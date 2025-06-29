@@ -168,21 +168,21 @@ function AdminDashboard() {
     const adminExams = exams.filter(exam => exam.adminEmail === currentUser?.email);
 
     return (
-        <div className="admin-dashboard bg-white flex flex-col items-center justify-start h-screen p-4 overflow-x-hidden"
-            style={{
-                backgroundImage: 'url("https://i.pinimg.com/236x/b5/69/85/b5698579540881089e74f9e994ba8885.jpg")',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                paddingTop: '1rem' // Adjusted to reduce top space
-            }}
+        <div className="admin-dashboard bg-sky-800 flex flex-col items-center justify-start h-screen p-4 overflow-x-hidden"
+            // style={{
+            //     backgroundImage: 'url("https://i.pinimg.com/236x/b5/69/85/b5698579540881089e74f9e994ba8885.jpg")',
+            //     backgroundSize: 'cover',
+            //     backgroundPosition: 'center',
+            //     paddingTop: '1rem' // Adjusted to reduce top space
+            // }}
         >
             <div className="mb-4">
-                <p className="text-lg font-semibold">Remaining exams this month: {remainingExams}</p>
+                <p className="text-lg font-semibold text-white">Remaining exams this month: {remainingExams}</p>
             </div>
 
             <button
                 onClick={handleButtonClick}
-                className="bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:bg-gradient-to-l"
+                className="bg-gradient-to-r from-cyan-400 to-sky-500 text-white font-bold p-4 rounded-3xl shadow-lg transition-transform transform hover:scale-105 hover:bg-gradient-to-l"
                 disabled={remainingExams <= 0} // Disable button if no remaining exams
             >
                 Create New Exam
@@ -212,7 +212,7 @@ function AdminDashboard() {
                             overflowY: 'auto',
                         }}
                     >
-                        <h2 style={{ textAlign: 'center', fontSize: '24px', color: '#555', marginBottom: '16px' }}>
+                        <h2 style={{ textAlign: 'center', fontSize: '24px', color: '#555', marginBottom: '16px' }} >
                             Create New Exam
                         </h2>
                         <form onSubmit={handleSubmit}>
@@ -391,11 +391,11 @@ function AdminDashboard() {
                 </div>
             )}
 
-            <div className="w-full max-w-4xl mt-8 overflow-x-auto">
+            <div className="w-full mt-8 rounded-3xl overflow-hiddenp-2">
                 {adminExams.length > 0 ? (
-                    <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
-                        <thead className="bg-gradient-to-r from-blue-400 to-blue-600 text-white">
-                            <tr>
+                    <table className="w-full bg-white border-4 border-gray-300 rounded-3xl shadow-md overflow-hidden">
+                        <thead className="bg-gradient-to-t from-cyan-400 to-cyan-600 text-white rounded-3xl border-4">
+                            <tr className='rounded-3xl'>
                                 <th className="px-6 py-3 border-b border-gray-300 text-left text-sm font-medium">Exam Name</th>
                                 <th className="px-6 py-3 border-b border-gray-300 text-left text-sm font-medium">Duration</th>
                                 <th className="px-6 py-3 border-b border-gray-300 text-left text-sm font-medium">Eligibility</th>
@@ -407,27 +407,27 @@ function AdminDashboard() {
                                 <th className="px-6 py-3 border-b border-gray-300 text-left text-sm font-medium">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody >
                             {adminExams.map((exam, index) => (
                                 <tr key={index} className="hover:bg-gray-100 transition-colors duration-300">
-                                    <td className="px-6 py-4 border-b border-gray-300 text-sm">{exam.examName}</td>
-                                    <td className="px-6 py-4 border-b border-gray-300 text-sm">{exam.duration}</td>
+                                    <td className="px-6 py-4 border-b border-gray-300 text-sm font-bold">{exam.examName}</td>
+                                    <td className="px-6 py-4 border-b border-gray-300 text-sm font-semibold">{exam.duration}</td>
                                     <td className="px-6 py-4 border-b border-gray-300 text-sm">{exam.eligibility}</td>
-                                    <td className="px-6 py-4 border-b border-gray-300 text-sm">{new Date(exam.examDate).toLocaleDateString()}</td>
-                                    <td className="px-6 py-4 border-b border-gray-300 text-sm">{new Date(exam.registrationEndDate).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4 border-b border-gray-300 text-sm font-bold">{new Date(exam.examDate).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4 border-b border-gray-300 text-sm font-bold">{new Date(exam.registrationEndDate).toLocaleDateString()}</td>
                                     <td className="px-6 py-4 border-b border-gray-300 text-sm">{exam.totalMarks}</td>
                                     <td className="px-6 py-4 border-b border-gray-300 text-sm">{exam.passingMarks}</td>
                                     <td className="px-6 py-4 border-b border-gray-300 text-sm">{exam.subjects.join(', ')}</td> {/* Display subjects */}
-                                    <td className="px-6 py-4 border-b border-gray-300 text-sm">
+                                    <td className="px-6 py-4 border-b border-gray-300 text-sm flex justify-center">
                                         <button
                                             onClick={() => handleQuestionListClick(exam.examName)} // Pass exam ID
-                                            className="bg-blue-500 text-white font-bold py-1 px-3 rounded hover:bg-blue-600"
+                                            className="bg-sky-500 text-white font-bold py-1 px-3 rounded-2xl hover:bg-sky-600 hover:scale-105 hover:transition-all"
                                         >
                                             Question List
                                         </button>
                                         <button
                                             onClick={() => handleViewRegisteredUsers(exam._id, exam.examName)} // Pass exam ID and name
-                                            className="ml-2 bg-green-500 text-white font-bold py-1 px-3 rounded hover:bg-green-600"
+                                            className="ml-2 bg-sky-950 text-white font-bold py-1 px-3 rounded-2xl hover:bg-cyan-800 hover:scale-105 hover:transition-all"
                                         >
                                             Registered Users
                                         </button>

@@ -50,7 +50,7 @@ function MyExams() {
                     <h3 className="text-2xl font-semibold mb-4">Upcoming Exams:</h3>
                     {exams.length > 0 ? (
                         <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-                            <thead>
+                            <thead className="bg-gradient-to-t from-cyan-400 to-cyan-600 text-white rounded-3xl border-4">
                                 <tr className="bg-gray-100 text-left text-gray-600">
                                     <th className="px-6 py-3 border-b">Exam Name</th>
                                     <th className="px-6 py-3 border-b">Duration</th>
@@ -81,7 +81,7 @@ function MyExams() {
                                                 <button
                                                     onClick={() => handleGiveExam(exam)}
                                                     disabled={!isToday}
-                                                    className={`${isToday ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-600 cursor-not-allowed'} font-semibold py-2 px-4 rounded transition`}
+                                                    className={`${isToday ? 'bg-cyan-800 text-white hover:bg-cyan-600 rounded-3xl' : 'bg-gray-300 text-gray-600 cursor-not-allowed'} font-semibold py-2 px-4 rounded-3xl transition`}
                                                 >
                                                     Give Exam
                                                 </button>

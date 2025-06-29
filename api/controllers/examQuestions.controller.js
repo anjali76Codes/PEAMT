@@ -67,6 +67,8 @@ export const createExamQuestions = async (req, res) => {
                 return res.status(400).json({ message: 'Each question must have a subject' });
             }
         }
+    
+
 
         // Find existing exam questions for the adminEmail
         const existingExam = await ExamQuestions.findOne({ examName, adminEmail });
@@ -123,4 +125,8 @@ export const getExamQuestions = async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch exam questions', error });
     }
 };
+
+
+
+
 

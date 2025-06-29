@@ -405,7 +405,8 @@ function RegistrationForm() {
 
 
     return (
-        <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
+        <div className='w-full bg-cyan-800 p-4'>
+        <div className="max-w-lg mx-auto p-8 bg-white/60 backdrop-blur-3xl rounded-2xl shadow-md">
             <h2 className="text-2xl font-bold mb-6">Registration Form</h2>
             {exam && (
                 <div className="mb-4">
@@ -422,13 +423,13 @@ function RegistrationForm() {
                         name="adhar"
                         value={formData.adhar}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                     <button
                         type="button"
                         onClick={handleFetchDetails}
-                        className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                        className="mt-2 bg-sky-500 text-white px-4 py-2 rounded-3xl hover:bg-sky-600"
                     >
                         Fetch Details
                     </button>
@@ -444,7 +445,7 @@ function RegistrationForm() {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -456,7 +457,7 @@ function RegistrationForm() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -468,7 +469,7 @@ function RegistrationForm() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -480,7 +481,7 @@ function RegistrationForm() {
                         name="fatherName"
                         value={formData.fatherName}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -492,7 +493,7 @@ function RegistrationForm() {
                         name="motherName"
                         value={formData.motherName}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -513,7 +514,7 @@ function RegistrationForm() {
                                 name="permanentAddress.country"
                                 value={formData.permanentAddress.country}
                                 onChange={handleAddressChange}
-                                className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border rounded-3xl shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
                             >
                                 <option value="" disabled>Select Country</option>
                                 {countries.map((country, index) => (
@@ -535,7 +536,7 @@ function RegistrationForm() {
                                 name="permanentAddress.state"
                                 value={formData.permanentAddress.state}
                                 onChange={handleAddressChange}
-                                className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border rounded-3xl shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
                             >
                                 <option value="" disabled>Select State</option>
                                 {states.map((state, index) => (
@@ -557,7 +558,7 @@ function RegistrationForm() {
                                 name="permanentAddress.city"
                                 value={formData.permanentAddress.city}
                                 onChange={handleAddressChange}
-                                className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border rounded-3xl shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
                             >
                                 <option value="" disabled>Select City</option>
                                 {cities.map((city, index) => (
@@ -580,7 +581,7 @@ function RegistrationForm() {
                                 type="text"
                                 value={formData.permanentAddress.pincode}
                                 onChange={handleAddressChange}
-                                className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border rounded-3xl shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
                             />
                         </div>
                     </div>
@@ -594,7 +595,7 @@ function RegistrationForm() {
                         name="dateOfBirth"
                         value={formData.dateOfBirth}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -606,7 +607,7 @@ function RegistrationForm() {
                         name="gender"
                         value={formData.gender}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     >
                         <option value="" disabled>Select Gender</option>
@@ -624,7 +625,7 @@ function RegistrationForm() {
                         name="nationality"
                         value={formData.nationality}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -637,7 +638,7 @@ function RegistrationForm() {
                         name="emergencyContact.name"
                         value={formData.emergencyContact.name}
                         onChange={handleAddressChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -650,7 +651,7 @@ function RegistrationForm() {
                         name="emergencyContact.phone"
                         value={formData.emergencyContact.phone}
                         onChange={handleAddressChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         required
                     />
                 </div>
@@ -662,7 +663,7 @@ function RegistrationForm() {
                         name="previousEducation"
                         value={formData.previousEducation}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-cyan-800 focus:border-cyan-900 sm:text-sm"
                         rows="3"
                         required
                     />
@@ -681,7 +682,7 @@ function RegistrationForm() {
                         type="text"
                         value={formData.currentCourse}
                         onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border rounded-3xl shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
                         required
                     />
                 </div>
@@ -700,13 +701,13 @@ function RegistrationForm() {
                                 name="subjects"
                                 value={subject}
                                 onChange={(e) => handleSubjectChange(e, index)}
-                                className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border rounded-3xl shadow-sm border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
                                 placeholder={`Subject ${index + 1}`}
                             />
                             <button
                                 type="button"
                                 onClick={() => removeSubject(index)}
-                                className="bg-red-500 text-white px-3 py-1 rounded-md"
+                                className="bg-red-500 text-white px-3 py-1 rounded-3xl"
                             >
                                 Remove
                             </button>
@@ -715,7 +716,7 @@ function RegistrationForm() {
                     <button
                         type="button"
                         onClick={addSubject}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                        className="bg-sky-500 text-white px-4 py-2 rounded-3xl"
                     >
                         Add Subject
                     </button>
@@ -726,18 +727,18 @@ function RegistrationForm() {
                     <p className='mb-6 text-gray-600'>Please complete the payment of ₹99 to complete your registration.</p>
                     {error && <div className='text-red-500 mb-4'>{error}</div>}
                     {paymentSuccessful && (
-                        <div className='bg-green-100 text-green-800 p-4 rounded-md mb-4'>
+                        <div className='bg-green-100 text-green-800 p-4 rounded-3xl mb-4'>
                             Payment Successful! Your Payment ID is: <strong>{paymentId}</strong>
                         </div>
                     )}
                     {paymentCompleted ? (
-                        <div className='bg-gray-100 text-gray-600 p-4 rounded-md'>
+                        <div className='bg-gray-100 text-gray-600 p-4 rounded-3xl'>
                             Payment has already been completed. Thank you!
                         </div>
                     ) : (
                         <button
                             onClick={handlePayment}
-                            className={`bg-blue-500 text-white px-6 py-3 rounded-md font-semibold transition-transform transform ${loading ? 'cursor-wait' : 'hover:scale-105'}`}
+                            className={`bg-sky-500 text-white px-6 py-3 rounded-3xl font-semibold transition-transform transform ${loading ? 'cursor-wait' : 'hover:scale-105'}`}
                             disabled={loading}
                         >
                             {loading ? 'Processing...' : 'Pay ₹99 with Razorpay'}
@@ -747,7 +748,7 @@ function RegistrationForm() {
 
                 <button
                     type="submit"
-                    className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="w-full py-2 px-4 border border-transparent rounded-3xl shadow-sm text-white bg-sky-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-cyan-800 focus:ring-offset-2"
                 >
                     Submit
                 </button>
@@ -758,6 +759,7 @@ function RegistrationForm() {
                 onClose={() => setModalOpen(false)}
                 formData={formData} // Pass form data to the modal
             />
+        </div>
         </div>
     );
 
